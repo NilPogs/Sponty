@@ -2,26 +2,54 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, User, ShoppingCart } from "lucide-react";
+import { Link } from "wouter";
 
 interface HeaderProps {
   onLoginClick?: () => void;
   onSignupClick?: () => void;
   isLoggedIn?: boolean;
-  userRole?: 'user' | 'admin';
+  userRole?: "user" | "admin";
 }
 
-export default function Header({ onLoginClick, onSignupClick, isLoggedIn = false, userRole }: HeaderProps) {
+export default function Header({
+  onLoginClick,
+  onSignupClick,
+  isLoggedIn = false,
+  userRole,
+}: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const handleScrollToContact = () => {
+    const contactSection = document.getElementById("contact");
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: "smooth" });
+    }
+    setIsMenuOpen(false);
+  };
+
+  const handleScrollToInventory = () => {
+    const inventorySection = document.getElementById("inventory");
+    if (inventorySection) {
+      inventorySection.scrollIntoView({ behavior: "smooth" });
+    }
+    setIsMenuOpen(false);
+  };
+
+  const handleScrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  setIsMenuOpen(false);
+};
+
+
   const navItems = [
-    { label: "Home", href: "#" },
-    { label: "Inventory", href: "#inventory" },
-    { label: "About", href: "#about" },
-    { label: "Contact", href: "#contact" },
+    { label: "Home", onClick: handleScrollToTop, type: "scroll" },
+    { label: "Inventory", onClick: handleScrollToInventory, type: "scroll" }, // ✅ Fixed
+    { label: "About", href: "/about", type: "route" },
+    { label: "Contact", onClick: handleScrollToContact, type: "scroll" },
   ];
 
-  if (userRole === 'admin') {
-    navItems.push({ label: "Admin Dashboard", href: "#admin" });
+  if (userRole === "admin") {
+    navItems.push({ label: "Admin Dashboard", href: "/admin", type: "route" });
   }
 
   return (
@@ -37,16 +65,23 @@ export default function Header({ onLoginClick, onSignupClick, isLoggedIn = false
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
-          {navItems.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-              data-testid={`link-${item.label.toLowerCase().replace(' ', '-')}`}
-            >
-              {item.label}
-            </a>
-          ))}
+          {navItems.map((item) =>
+            item.type === "route" ? (
+              <Link key={item.label} href={item.href!}>
+                <span className="cursor-pointer text-sm font-medium text-foreground hover:text-primary transition-colors">
+                  {item.label}
+                </span>
+              </Link>
+            ) : (
+              <span
+                key={item.label}
+                onClick={item.onClick}
+                className="cursor-pointer text-sm font-medium text-foreground hover:text-primary transition-colors"
+              >
+                {item.label}
+              </span>
+            )
+          )}
         </nav>
 
         {/* Desktop Auth Buttons */}
@@ -84,17 +119,26 @@ export default function Header({ onLoginClick, onSignupClick, isLoggedIn = false
               <SheetTitle>Menu</SheetTitle>
             </SheetHeader>
             <nav className="flex flex-col space-y-4 mt-6">
-              {navItems.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className="text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
-                  onClick={() => setIsMenuOpen(false)}
-                  data-testid={`mobile-link-${item.label.toLowerCase().replace(' ', '-')}`}
-                >
-                  {item.label}
-                </a>
-              ))}
+              {navItems.map((item) =>
+                item.type === "route" ? (
+                  <Link key={item.label} href={item.href!}>
+                    <span
+                      onClick={() => setIsMenuOpen(false)}
+                      className="cursor-pointer text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
+                    >
+                      {item.label}
+                    </span>
+                  </Link>
+                ) : (
+                  <span
+                    key={item.label}
+                    onClick={item.onClick}
+                    className="cursor-pointer text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
+                  >
+                    {item.label}
+                  </span>
+                )
+              )}
               <div className="flex flex-col space-y-2 pt-4 border-t">
                 {isLoggedIn ? (
                   <>
@@ -109,10 +153,19 @@ export default function Header({ onLoginClick, onSignupClick, isLoggedIn = false
                   </>
                 ) : (
                   <>
-                    <Button variant="ghost" onClick={onLoginClick} className="justify-start" data-testid="mobile-button-login">
+                    <Button
+                      variant="ghost"
+                      onClick={onLoginClick}
+                      className="justify-start"
+                      data-testid="mobile-button-login"
+                    >
                       Log In
                     </Button>
-                    <Button onClick={onSignupClick} className="justify-start" data-testid="mobile-button-signup">
+                    <Button
+                      onClick={onSignupClick}
+                      className="justify-start"
+                      data-testid="mobile-button-signup"
+                    >
                       Sign Up
                     </Button>
                   </>
